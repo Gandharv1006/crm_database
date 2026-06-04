@@ -1,0 +1,108 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background-color: var(--color-surface-0);
+  position: relative;
+  overflow: hidden;
+}
+
+.bgGrad1 {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 800px;
+  height: 800px;
+  background-color: rgba(99, 102, 241, 0.05);
+  border-radius: 9999px;
+  filter: blur(100px);
+  pointer-events: none;
+}
+
+.bgGrad2 {
+  position: absolute;
+  top: 20%;
+  left: 20%;
+  width: 400px;
+  height: 400px;
+  background-color: rgba(245, 158, 11, 0.05);
+  border-radius: 9999px;
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+.card {
+  text-align: center;
+  animation: fadeSlideUp 0.5s ease-out;
+  position: relative;
+  z-index: 10;
+  padding: 3rem;
+  max-width: 32rem;
+  width: 100%;
+}
+
+.iconContainer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 6rem;
+  height: 6rem;
+  border-radius: 1.5rem;
+  margin-bottom: 2rem;
+  background-color: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  color: var(--color-warning);
+  position: relative;
+}
+
+.iconBlur {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(245, 158, 11, 0.2);
+  border-radius: 1.5rem;
+  filter: blur(24px);
+}
+
+.title {
+  font-size: 6rem;
+  font-weight: 900;
+  margin-bottom: 0.5rem;
+  color: transparent;
+  background-clip: text;
+  -webkit-background-clip: text;
+  background-image: linear-gradient(to right, var(--color-text-primary), var(--color-text-muted));
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+
+.subtitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  color: var(--color-text-primary);
+}
+
+.description {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 2.5rem;
+  color: var(--color-text-muted);
+  max-width: 20rem;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.625;
+}
+
+.button {
+  width: 100%;
+  max-width: 200px;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
