@@ -166,6 +166,18 @@ export default function ClassDetailPage() {
     }
   };
 
+  const handleUnsuspend = async () => {
+    if (confirm("Are you sure you want to remove suspension? The owner will regain panel access.")) {
+      try {
+        await updateClassStatus(ownerId, "ACTIVE");
+        toast.success("Account reactivated successfully!");
+        loadData();
+      } catch (err: any) {
+        toast.error(err.message || "Failed to reactivate account");
+      }
+    }
+  };
+
   const handlePaymentBoardToggle = async (checked: boolean) => {
     if (checked) {
       setShowSetupCredentials(true);
@@ -659,10 +671,17 @@ export default function ClassDetailPage() {
                   <Lock size={16} />
                   Reset Password
                 </button>
-                <button className="btn-danger w-full justify-center" onClick={handleSuspend}>
-                  <ShieldAlert size={16} />
-                  Suspend Account
-                </button>
+                {reg.status === "SUSPENDED" ? (
+                  <button className="btn-primary w-full justify-center" style={{ backgroundColor: "var(--color-success)", borderColor: "var(--color-success)" }} onClick={handleUnsuspend}>
+                    <ShieldAlert size={16} />
+                    Remove Suspend
+                  </button>
+                ) : (
+                  <button className="btn-danger w-full justify-center" onClick={handleSuspend}>
+                    <ShieldAlert size={16} />
+                    Suspend Account
+                  </button>
+                )}
               </div>
 
               {/* Payment Board Credentials Section */}

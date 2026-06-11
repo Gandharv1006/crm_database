@@ -407,6 +407,11 @@ export async function addNewClass(formData: {
   paymentBoardEnabled?: boolean;
   paymentBoardUsername?: string | null;
   paymentBoardPassword?: string | null;
+  deviceId?: string;
+  instituteId?: string;
+  classPhotoUrl?: string;
+  ownerPhotoUrl?: string;
+  classLogoUrl?: string;
 }) {
   // If username is empty (disabled credentials), use a dummy unique email
   const emailVal = formData.username
@@ -444,7 +449,7 @@ export async function addNewClass(formData: {
     .single();
   if (userError) {
     if (userError.message?.includes("duplicate key value violates unique constraint")) {
-      throw new Error(`The username "${formData.username}" or email is already taken. Please choose a different username.`);
+      throw new Error(`Duplicate constraint violated (could be email or mobile): ${userError.message}`);
     }
     throw new Error(`Failed to create user: ${userError.message}`);
   }
@@ -457,6 +462,11 @@ export async function addNewClass(formData: {
       institute_name: formData.instituteName,
       city: formData.city,
       contact: formData.ownerMobile,
+      institute_id: formData.instituteId,
+      device_id: formData.deviceId,
+      class_photo_url: formData.classPhotoUrl,
+      owner_photo_url: formData.ownerPhotoUrl,
+      class_logo_url: formData.classLogoUrl,
     })
     .select()
     .single();

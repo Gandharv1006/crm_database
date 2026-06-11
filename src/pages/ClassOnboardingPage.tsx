@@ -52,6 +52,7 @@ export default function ClassOnboardingPage() {
     city: "",
     state: "Maharashtra",
     pincode: "",
+    deviceId: "",
     deductionPerStudent: 270,
     notes: "",
 
@@ -101,6 +102,10 @@ export default function ClassOnboardingPage() {
       }
       if (!form.ownerFullName.trim()) {
         toast.error("Owner Name is required");
+        return false;
+      }
+      if (!form.deviceId.trim()) {
+        toast.error("Device ID is required");
         return false;
       }
       if (!form.ownerEmail.trim()) {
@@ -241,6 +246,9 @@ export default function ClassOnboardingPage() {
         } : {})
       });
 
+      // Generate Institute ID (INST-XXXXXX-TIMESTAMP)
+      const instituteId = `INST-${Math.random().toString(36).substr(2, 6).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
+
       // Submit Section A credentials to addNewClass
       await addNewClass({
         instituteName: form.instituteName,
@@ -259,6 +267,11 @@ export default function ClassOnboardingPage() {
         paymentBoardEnabled: enablePaymentBoard,
         paymentBoardUsername: enablePaymentBoard ? form.paymentBoardUsername.trim().toLowerCase() : null,
         paymentBoardPassword: enablePaymentBoard ? form.paymentBoardPassword : null,
+        deviceId: form.deviceId,
+        instituteId: instituteId,
+        classPhotoUrl: classUrl,
+        ownerPhotoUrl: ownerUrl,
+        classLogoUrl: logoUrl,
       });
 
       toast.success("Class registered successfully!");
@@ -383,6 +396,15 @@ export default function ClassOnboardingPage() {
                     placeholder="e.g. info@newtonacademy.in"
                     value={form.ownerEmail}
                     onChange={(e) => handleChange("ownerEmail", e.target.value)}
+                  />
+                </div>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel}>Device ID *</label>
+                  <input
+                    className="input-field"
+                    placeholder="Enter Device ID"
+                    value={form.deviceId}
+                    onChange={(e) => handleChange("deviceId", e.target.value)}
                   />
                 </div>
                 <div className={styles.fieldGroup}>
