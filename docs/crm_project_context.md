@@ -1,7 +1,7 @@
 ---
 last_updated: 2026-11-03
 updated_by: agent
-trigger: Fixed dashboard class logo sizing (strict 32x32px CSS module), resolved missing dashboard metrics (14 total classes, active rate, 515 enrolled students, and ₹2.97L escrow balance), and enhanced charts & activity feeds.
+trigger: Added production fallback environment variables in supabase.ts and cloudinary.ts to prevent deployment crashes when .env is not passed to CI/CD.
 file_count: 64
 table_count: 7 (CRM-specific new tables) + 11 (shared tables from Class Admin)
 ---

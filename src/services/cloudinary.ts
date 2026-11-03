@@ -1,7 +1,7 @@
 // Uses an unsigned upload preset — no API secret needed on the client
 export async function uploadToCloudinary(file: File): Promise<string> {
-  const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-  const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+  const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "do4rncl4c";
+  const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "acadex_unsigned";
 
   if (!CLOUD_NAME || !UPLOAD_PRESET) {
     throw new Error("Cloudinary configuration is missing in environment variables.");
