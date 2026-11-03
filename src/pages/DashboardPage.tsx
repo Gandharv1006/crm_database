@@ -38,7 +38,7 @@ interface StatCardProps {
   value: string | number;
   sub: string;
   icon: React.ReactNode;
-  trend: "up" | "down" | "neutral";
+  trend?: "up" | "down" | "neutral";
   colorClass: string;
 }
 
@@ -50,13 +50,20 @@ function StatCard({ title, value, sub, icon, trend, colorClass }: StatCardProps)
           <div className={clsx("icon-badge", colorClass)}>
             {icon}
           </div>
-          <div className={styles.trendIndicator}>
-            {trend === "up" && <ArrowUpRight className="text-[var(--color-success)]" size={14} />}
-            {trend === "down" && <ArrowDownRight className="text-[var(--color-danger)]" size={14} />}
-            <span className={trend === "up" ? "text-[var(--color-success)]" : trend === "down" ? "text-[var(--color-danger)]" : "text-[var(--color-text-muted)]"}>
+          {trend && (
+            <div className={styles.trendIndicator}>
+              {trend === "up" && <ArrowUpRight className="text-[var(--color-success)]" size={14} />}
+              {trend === "down" && <ArrowDownRight className="text-[var(--color-danger)]" size={14} />}
+              <span className={trend === "up" ? "text-[var(--color-success)]" : trend === "down" ? "text-[var(--color-danger)]" : "text-[var(--color-text-muted)]"}>
+                {sub}
+              </span>
+            </div>
+          )}
+          {!trend && (
+            <span className="text-[11px] font-semibold text-[var(--color-text-muted)]">
               {sub}
             </span>
-          </div>
+          )}
         </div>
         <div>
           <div className={styles.statValue}>{value}</div>
@@ -65,6 +72,19 @@ function StatCard({ title, value, sub, icon, trend, colorClass }: StatCardProps)
       </div>
     </div>
   );
+}
+
+function formatMonthLabel(m: any): string {
+  if (!m || typeof m !== "string") return String(m ?? "");
+  const parts = m.split("-");
+  if (parts.length === 2) {
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthIdx = parseInt(parts[1], 10) - 1;
+    if (monthIdx >= 0 && monthIdx < 12) {
+      return `${months[monthIdx]} '${parts[0].slice(2)}`;
+    }
+  }
+  return m;
 }
 
 function getRelativeTime(dateStr: string) {
@@ -127,19 +147,19 @@ export default function DashboardPage() {
       <div className={clsx("page-enter", styles.container)}>
         <div className={styles.headerRow}>
           <div className={styles.loadingHeader}>
-            <div className="h-8 w-64 skeleton" />
-            <div className="h-4 w-48 skeleton" />
+            <div className={clsx("skeleton", styles.skeletonTitle)} />
+            <div className={clsx("skeleton", styles.skeletonSubtitle)} />
           </div>
-          <div className="h-10 w-40 skeleton" />
+          <div className={clsx("skeleton", styles.skeletonSubtitle)} style={{ height: "2.5rem", width: "10rem" }} />
         </div>
         <div className={styles.statsGrid}>
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="skeleton h-36 rounded-2xl" />
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className={clsx("skeleton", styles.skeletonStatCard)} />
           ))}
         </div>
         <div className={styles.chartsGrid}>
-          <div className="skeleton h-[340px] rounded-2xl" />
-          <div className="skeleton h-[340px] rounded-2xl" />
+          <div className={clsx("skeleton", styles.skeletonStatCard)} style={{ height: "340px" }} />
+          <div className={clsx("skeleton", styles.skeletonStatCard)} style={{ height: "340px" }} />
         </div>
       </div>
     );
@@ -155,7 +175,7 @@ export default function DashboardPage() {
           </h1>
           <p className={styles.mainSubtitle}>Here's what's happening today.</p>
         </div>
-        <Link to="/classes/new" className="btn-primary flex items-center gap-2">
+        <Link to="/classes/new" className="btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
           <Plus size={16} />
           Register New Class
         </Link>
@@ -166,32 +186,46 @@ export default function DashboardPage() {
         <StatCard
           title="Total Registered"
           value={stats?.totalRegistered || 0}
-          sub="+12%"
-          icon={<School size={22} />}
-          trend="up"
+          sub="Institutes on platform"
+          icon={<School size={20} />}
           colorClass="icon-badge-brand"
         />
         <StatCard
           title="Active Classes"
           value={stats?.activeClasses || 0}
-          sub="+8%"
-          icon={<School size={22} />}
+          sub={`${stats?.totalRegistered ? Math.round(((stats.activeClasses || 0) / stats.totalRegistered) * 100) : 100}% Active rate`}
+          icon={<School size={20} />}
           trend="up"
           colorClass="icon-badge-success"
         />
         <StatCard
-          title="Gross Revenue"
-          value={stats?.grossRevenue ? `₹${(stats.grossRevenue).toLocaleString()}` : "₹0"}
-          sub="+24%"
-          icon={<TrendingUp size={22} />}
+          title="Total Students"
+          value={stats?.totalStudents || 0}
+          sub="Enrolled in batches"
+          icon={<Users size={20} />}
           trend="up"
           colorClass="icon-badge-info"
         />
         <StatCard
+          title="Escrow Balance"
+          value={stats?.totalWalletBalance ? `₹${Number(stats.totalWalletBalance).toLocaleString()}` : "₹0"}
+          sub="Total wallet funds"
+          icon={<Wallet size={20} />}
+          colorClass="icon-badge-warning"
+        />
+        <StatCard
+          title="Gross Revenue"
+          value={stats?.grossRevenue ? `₹${Number(stats.grossRevenue).toLocaleString()}` : "₹0"}
+          sub="Projected revenue"
+          icon={<TrendingUp size={20} />}
+          trend="up"
+          colorClass="icon-badge-brand"
+        />
+        <StatCard
           title="Net Revenue"
-          value={stats?.netRevenue ? `₹${(stats.netRevenue).toLocaleString()}` : "₹0"}
+          value={stats?.netRevenue ? `₹${Number(stats.netRevenue).toLocaleString()}` : "₹0"}
           sub={(stats?.netRevenue || 0) >= 0 ? "Profit" : "Loss"}
-          icon={(stats?.netRevenue || 0) >= 0 ? <TrendingUp size={22} /> : <TrendingDown size={22} />}
+          icon={(stats?.netRevenue || 0) >= 0 ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
           trend={(stats?.netRevenue || 0) >= 0 ? "up" : "down"}
           colorClass={(stats?.netRevenue || 0) >= 0 ? "icon-badge-success" : "icon-badge-danger"}
         />
@@ -200,19 +234,21 @@ export default function DashboardPage() {
       {/* Charts Section */}
       <div className={clsx("stagger-children", styles.chartsGrid)}>
         {/* Monthly Revenue Analytics */}
-        <div className="glass-card-elevated p-6 flex flex-col">
+        <div className={clsx("glass-card-elevated", styles.chartCard)}>
           <h2 className={styles.cardTitle}>
             Monthly Revenue
           </h2>
           {monthlyRevenue.length > 0 ? (
-            <div className="flex-1 min-h-[260px]">
+            <div className={styles.chartWrapper}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={monthlyRevenue}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
-                  <XAxis dataKey="month" tick={{ fill: "#55556a", fontSize: 11 }} axisLine={false} tickLine={false} dy={10} />
-                  <YAxis tick={{ fill: "#55556a", fontSize: 11 }} axisLine={false} tickLine={false} dx={-10} tickFormatter={(value) => `₹${value}`} />
+                  <XAxis dataKey="month" tickFormatter={formatMonthLabel} tick={{ fill: "#55556a", fontSize: 11 }} axisLine={false} tickLine={false} dy={10} />
+                  <YAxis tick={{ fill: "#55556a", fontSize: 11 }} axisLine={false} tickLine={false} dx={-10} tickFormatter={(value) => `₹${Number(value).toLocaleString()}`} />
                   <Tooltip
                     cursor={{ fill: "rgba(255,255,255,0.02)" }}
+                    formatter={(value: any) => [`₹${Number(value).toLocaleString()}`, "Revenue"]}
+                    labelFormatter={formatMonthLabel}
                     contentStyle={{
                       background: "#1e1e2a",
                       border: "1px solid #ffffff18",
@@ -228,26 +264,28 @@ export default function DashboardPage() {
               </ResponsiveContainer>
             </div>
           ) : (
-             <div className="flex flex-col items-center justify-center flex-1 min-h-[260px] text-[var(--color-text-muted)]">
-              <Calendar size={36} className="mb-3 opacity-20" />
+             <div className={styles.chartEmptyState}>
+              <Calendar size={36} className={styles.emptyIcon} />
               <span className="text-sm">No revenue data available</span>
             </div>
           )}
         </div>
 
         {/* Student Growth Chart */}
-        <div className="glass-card-elevated p-6 flex flex-col">
+        <div className={clsx("glass-card-elevated", styles.chartCard)}>
           <h2 className={styles.cardTitle}>
             Student Growth
           </h2>
           {studentGrowth.length > 0 ? (
-            <div className="flex-1 min-h-[260px]">
+            <div className={styles.chartWrapper}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={studentGrowth}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
-                  <XAxis dataKey="month" tick={{ fill: "#55556a", fontSize: 11 }} axisLine={false} tickLine={false} dy={10} />
+                  <XAxis dataKey="month" tickFormatter={formatMonthLabel} tick={{ fill: "#55556a", fontSize: 11 }} axisLine={false} tickLine={false} dy={10} />
                   <YAxis tick={{ fill: "#55556a", fontSize: 11 }} axisLine={false} tickLine={false} dx={-10} />
                   <Tooltip
+                    formatter={(value: any) => [`${Number(value).toLocaleString()} students`, "Total Students"]}
+                    labelFormatter={formatMonthLabel}
                     contentStyle={{
                       background: "#1e1e2a",
                       border: "1px solid #ffffff18",
@@ -263,8 +301,8 @@ export default function DashboardPage() {
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center flex-1 min-h-[260px] text-[var(--color-text-muted)]">
-              <Users size={36} className="mb-3 opacity-20" />
+            <div className={styles.chartEmptyState}>
+              <Users size={36} className={styles.emptyIcon} />
               <span className="text-sm">No student growth data available</span>
             </div>
           )}
@@ -275,42 +313,78 @@ export default function DashboardPage() {
       <div className={clsx("stagger-children", styles.bottomGrid)}>
         {/* Top Performing Classes Table */}
         <div className={clsx("glass-card-elevated", styles.largeCard)}>
-          <h2 className={styles.cardTitle}>
-            Top Performing Classes
-          </h2>
-          <div className="overflow-x-auto flex-1">
+          <div className={styles.tableHeaderRow}>
+            <h2 className={styles.cardTitle} style={{ margin: 0, padding: 0, border: "none" }}>
+              Top Performing Classes
+            </h2>
+            <Link to="/classes" className={styles.viewAllLink}>
+              View All Classes
+            </Link>
+          </div>
+          <div className={styles.tableContainer}>
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Institute Name</th>
-                  <th>Owner</th>
-                  <th>Students</th>
+                  <th>Institute</th>
+                  <th>Enrolled</th>
                   <th>Revenue</th>
                   <th>Status</th>
+                  <th style={{ textAlign: "right" }}>Action</th>
                 </tr>
               </thead>
               <tbody>
                 {topClasses.length > 0 ? (
                   topClasses.map((item, idx) => (
                     <tr key={idx}>
-                      <td className="font-semibold text-[var(--color-text-primary)]">
-                        <Link to={`/classes/${item.owner_id}`} className="hover:text-[var(--color-brand-400)] transition-colors">
-                          {item.institute_name}
-                        </Link>
+                      <td>
+                        <div className={styles.tableInstituteCell}>
+                          {item.class_logo_url ? (
+                            <img
+                              src={item.class_logo_url}
+                              alt={item.institute_name}
+                              className={styles.tableClassLogo}
+                            />
+                          ) : (
+                            <div className={styles.tableClassLogoFallback}>
+                              <School size={15} />
+                            </div>
+                          )}
+                          <div className={styles.tableInstituteDetails}>
+                            <Link to={`/classes/${item.owner_id}`} className={styles.tableInstituteName} title={item.institute_name}>
+                              {item.institute_name}
+                            </Link>
+                            <span className={styles.tableInstituteOwner}>{item.owner_name}</span>
+                          </div>
+                        </div>
                       </td>
-                      <td>{item.owner_name}</td>
-                      <td>{item.student_count}</td>
-                      <td className="font-mono text-xs">₹{item.revenue.toLocaleString()}</td>
+                      <td>
+                        <span className={styles.studentCountValue}>{item.student_count}</span>
+                        <span className={styles.studentCountLabel}>students</span>
+                      </td>
+                      <td>
+                        <span className={styles.revenueValue}>
+                          ₹{Number(item.revenue || 0).toLocaleString()}
+                        </span>
+                      </td>
                       <td>
                         <span className={`badge badge-${(item.status || "active").toLowerCase()}`}>
                           {item.status}
                         </span>
                       </td>
+                      <td style={{ textAlign: "right" }}>
+                        <Link
+                          to={`/classes/${item.owner_id}`}
+                          className={clsx("btn-ghost", styles.viewButton)}
+                        >
+                          <span>View</span>
+                          <ArrowUpRight size={13} />
+                        </Link>
+                      </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="text-center py-8 text-[var(--color-text-muted)]">
+                    <td colSpan={5} className={styles.tableEmptyRow}>
                       No classes registered yet.
                     </td>
                   </tr>
@@ -336,7 +410,7 @@ export default function DashboardPage() {
                 <div key={idx} className={styles.activityItem}>
                   <div className={clsx(
                     styles.activityDot,
-                    tx.transaction_type === "DEPOSIT" ? "bg-[var(--color-success)] text-[var(--color-success)]" : "bg-[var(--color-danger)] text-[var(--color-danger)]"
+                    tx.transaction_type === "DEPOSIT" ? styles.depositDot : styles.deductionDot
                   )} />
                   <div className={styles.activityInfo}>
                     <p className={styles.activityInstituteName}>
@@ -350,15 +424,15 @@ export default function DashboardPage() {
                     </p>
                   </div>
                   <div className={styles.activityAmount}>
-                    <span className={tx.transaction_type === "DEPOSIT" ? "text-[var(--color-success)]" : "text-[var(--color-danger)]"}>
-                      {tx.transaction_type === "DEPOSIT" ? "+" : "-"}₹{Number(tx.amount).toLocaleString()}
+                    <span className={tx.transaction_type === "DEPOSIT" ? styles.depositAmount : styles.deductionAmount}>
+                      {tx.transaction_type === "DEPOSIT" ? "+" : "-"}₹{Math.abs(Number(tx.amount)).toLocaleString()}
                     </span>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="flex flex-col items-center justify-center h-full text-[var(--color-text-muted)]">
-                <Wallet size={32} className="mb-3 opacity-20" />
+              <div className={styles.activityEmptyState}>
+                <Wallet size={32} className={styles.emptyIcon} />
                 <span className="text-xs">No recent activity</span>
               </div>
             )}

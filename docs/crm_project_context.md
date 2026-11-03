@@ -1,7 +1,7 @@
 ---
-last_updated: 2026-05-29
+last_updated: 2026-11-03
 updated_by: agent
-trigger: Added non-blocking duplicate checks for mobile/email when registering salespeople or employees.
+trigger: Fixed dashboard class logo sizing (strict 32x32px CSS module), resolved missing dashboard metrics (14 total classes, active rate, 515 enrolled students, and ₹2.97L escrow balance), and enhanced charts & activity feeds.
 file_count: 64
 table_count: 7 (CRM-specific new tables) + 11 (shared tables from Class Admin)
 ---
@@ -181,7 +181,7 @@ No React Context or global store is used — all state is local component state 
 | Class Onboarding Wizard | ClassOnboardingPage | Step 1: instituteName*, ownerFullName*, ownerMobile, alternateMobile, ownerEmail*, salespersonId, classPhotoFile, ownerPhotoFile, classLogoFile, officeAddress, city, state, pincode (6-digit), deductionPerStudent*, notes; Step 2: Section A (Mandatory Class Admin): username*, password*, confirmPassword*; Section B (Optional Payment Board): paymentBoardEnabled toggle, paymentBoardUsername*, paymentBoardPassword*, paymentBoardConfirmPassword* (conditional) | Step-by-step validations, automatic username suggestion for Section A (appends @acadex.in), conditional credentials validation for Section B when enabled (no suffix), deduction > 0. Selected images are uploaded to Cloudinary, and URLs saved inside the stringified notes column JSON. |
 | Setup Credentials | ClassDetailPage > SetupCredentialsDialog | username*, password*, confirmPassword* | Required fields, checks that password and confirmPassword match |
 | Add Funds | ClassDetailPage > AddFundsDialog / WalletPage > AddFundsDialogInline | amount*, paymentMode, reference, note | Amount > 0 required |
-| Edit Class | ClassDetailPage > EditClassDialog | instituteName*, city, ownerFullName*, ownerMobile*, ownerEmail*, alternateMobile, officeAddress, state, pincode, deductionPerStudent*, status, salespersonIds | Required fields validation before calling DB update, supports multi-salesperson assignments |
+| Edit Class | ClassDetailPage > EditClassDialog | instituteName*, instituteId, deviceId, classLogoFile/Url, classPhotoFile/Url, ownerPhotoFile/Url, city, state, pincode, officeAddress, ownerFullName*, ownerMobile*, alternateMobile, ownerEmail*, deductionPerStudent*, status, planType, notes, salespersonIds, credentials (classAdminUsername/Password, paymentBoardEnabled/Username/Password) | Required fields validation, Cloudinary media upload for class logo and photos, saves branding and full details to class_owners, users, wallets, and crm_class_registrations. |
 | Add Salesperson | SalesmanPage > AddSalesmanDialog | fullName*, mobile*, email*, commissionPerStudent*, bankName, bankIfsc, bankAccountNumber, assignedClassIds, profilePhoto | Required fields checked, validates input, assigns selected classes to salesperson. Uploads optional profile photo to Cloudinary first and saves url to salespeople table. |
 | Edit Salesperson | SalesmanPage/SalesmanDetailPage > EditSalesmanDialog | fullName*, mobile*, email*, commissionPerStudent*, bankName, bankIfsc, bankAccountNumber, assignedClassIds | Required fields checked, updates profile and updates assigned classes list |
 | Add Employee | EmployeePage > AddEmployeeDialog | name*, mobile, address, role, bank_name, account_number, ifsc_code, assigned_salary, profilePhoto | Name required, salary must be numeric. Uploads optional profile photo to Cloudinary first and saves url to employees table. |

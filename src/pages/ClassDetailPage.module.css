@@ -701,3 +701,145 @@
 .passwordInputField {
   padding-right: 40px !important;
 }
+
+/* CRM Header Branding & Logo Elements */
+.headerBrandRow {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.classLogoContainer {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  flex-shrink: 0;
+}
+
+.classLogoImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.classLogoFallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--color-brand-400);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.05) 100%);
+}
+
+.headerInfoBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.headerMetaRow {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.classIdPill {
+  font-family: monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-brand-400);
+  background: rgba(99, 102, 241, 0.1);
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.metaPill {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  display: inline-flex;
+  align-items: center;
+}
+
+.statusDot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 6px;
+  background-color: currentColor;
+}
+
+/* Branding Assets Card */
+.assetsGrid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .assetsGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.assetCard {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.assetLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.assetThumbBox {
+  width: 100%;
+  height: 110px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--color-border-default);
+  background: var(--color-surface-1);
+}
+
+.assetThumbImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.2s ease;
+}
+
+.assetThumbImg:hover {
+  transform: scale(1.05);
+}
+
+.assetEmptyBox {
+  width: 100%;
+  height: 110px;
+  border-radius: 8px;
+  border: 1px dashed var(--color-border-default);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: var(--color-surface-1);
+}

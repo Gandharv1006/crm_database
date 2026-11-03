@@ -9,7 +9,8 @@ import {
   TrendingUp,
   MapPin,
   ChevronRight,
-  ChevronLeft
+  ChevronLeft,
+  Edit
 } from "lucide-react";
 import { getAllClasses, getDashboardStats } from "@/services/db";
 import { getUser, isSuperAdmin } from "@/services/auth";
@@ -246,15 +247,16 @@ export default function ClassesPage() {
                     <tr key={idx} className="group cursor-pointer" onClick={() => navigate(`/classes/${cls.owner_id}`)}>
                       <td>
                         {(() => {
-                          let classImg = "";
-                          try {
-                            if (cls.notes) {
-                              const notesObj = JSON.parse(cls.notes);
-                              classImg = notesObj.classLogoUrl || notesObj.classPhotoUrl || notesObj.ownerPhotoUrl || "";
-                            }
-                          } catch (e) {
-                            // Ignore json parsing errors
-                          }
+                          const classImg = cls.class_logo_url || cls.class_photo_url || cls.owner_photo_url || (() => {
+                            try {
+                              if (cls.notes) {
+                                const notesObj = JSON.parse(cls.notes);
+                                return notesObj.classLogoUrl || notesObj.classPhotoUrl || notesObj.ownerPhotoUrl || "";
+                              }
+                            } catch (e) {}
+                            return "";
+                          })();
+
                           return (
                             <div className="flex items-center gap-3">
                               {classImg ? (
@@ -308,7 +310,18 @@ export default function ClassesPage() {
                         </span>
                       </td>
                       <td>
-                        <div className={styles.actionCell}>
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            type="button"
+                            className="btn-ghost !py-1 !px-2.5 text-xs flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/classes/${cls.owner_id}`);
+                            }}
+                          >
+                            <Edit size={13} className="text-[var(--color-brand-400)]" />
+                            <span>Edit</span>
+                          </button>
                           <ChevronRight size={18} className="text-[var(--color-text-muted)] group-hover:text-[var(--color-brand-400)] transition-colors" />
                         </div>
                       </td>

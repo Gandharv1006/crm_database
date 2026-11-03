@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, Link } from "react-router-dom";
 import {
   LayoutDashboard,
   School,
@@ -9,9 +9,11 @@ import {
   ChevronLeft,
   Briefcase,
   Receipt,
-  LogOut
+  LogOut,
+  Plus,
+  Sparkles
 } from "lucide-react";
-import { getUser, logout } from "@/services/auth";
+import { getUser, logout, isSuperAdmin } from "@/services/auth";
 import { useMobile } from "@/hooks/use-mobile";
 import styles from "./app-sidebar.module.css";
 import clsx from "clsx";
@@ -29,30 +31,31 @@ export default function AppSidebar({ collapsed, onToggle, onMobileClose }: Sideb
 
   const navGroups = [
     {
-      title: "PLATFORM",
+      title: "WORKSPACE",
       items: [
         { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard, show: true },
-        { path: "/classes", label: "Classes", icon: School, show: true },
+        { path: "/classes", label: "Classes & Institutes", icon: School, show: true },
+      ]
+    },
+    {
+      title: "CRM & TEAM",
+      items: [
+        { path: user?.role === "SUPER_ADMIN" ? "/salesman" : `/salesman/${user?.salespersonId || ""}`, label: "Sales Team", icon: Users, show: user?.role === "SUPER_ADMIN" || !!user?.salespersonId },
         { path: "/employees", label: "Employees", icon: Briefcase, show: user?.role === "SUPER_ADMIN" },
       ]
     },
     {
-      title: "SALES",
+      title: "FINANCIALS",
       items: [
-        { path: user?.role === "SUPER_ADMIN" ? "/salesman" : `/salesman/${user?.salespersonId || ""}`, label: "Salesman", icon: Users, show: user?.role === "SUPER_ADMIN" || !!user?.salespersonId },
+        { path: "/payments", label: "Payments & Ledger", icon: CreditCard, show: true },
+        { path: "/expenses", label: "Expenses Ledger", icon: Receipt, show: user?.role === "SUPER_ADMIN" },
+        { path: "/wallet", label: "Wallets & Escrow", icon: Wallet, show: user?.role === "SUPER_ADMIN" },
       ]
     },
     {
-      title: "FINANCE",
+      title: "INTELLIGENCE",
       items: [
-        { path: "/expenses", label: "Expenses", icon: Receipt, show: user?.role === "SUPER_ADMIN" },
-        { path: "/wallet", label: "Wallet", icon: Wallet, show: user?.role === "SUPER_ADMIN" },
-      ]
-    },
-    {
-      title: "SYSTEM",
-      items: [
-        { path: "/analytics", label: "Analytics", icon: BarChart, show: user?.role === "SUPER_ADMIN" },
+        { path: "/analytics", label: "Platform Analytics", icon: BarChart, show: user?.role === "SUPER_ADMIN" },
       ]
     }
   ];
@@ -72,15 +75,32 @@ export default function AppSidebar({ collapsed, onToggle, onMobileClose }: Sideb
         </div>
         {!collapsed && (
           <div className={styles.logoTextWrapper}>
-            <span className={styles.logoTextMain}>
-              ACADEX CRM
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span className={styles.logoTextMain}>
+                ACADEX CRM
+              </span>
+              <span className={styles.hubBadge}>PRO</span>
+            </div>
             <span className={styles.logoTextSub}>
-              Control Panel
+              Enterprise Control Hub
             </span>
           </div>
         )}
       </div>
+
+      {/* Quick Action Button for CRM Users */}
+      {!collapsed && isSuperAdmin() && (
+        <div className={styles.quickActionBox}>
+          <Link
+            to="/classes/new"
+            onClick={() => isMobile && onMobileClose?.()}
+            className={styles.quickActionBtn}
+          >
+            <Plus size={15} />
+            <span>Onboard New Class</span>
+          </Link>
+        </div>
+      )}
 
       {/* Nav Links */}
       <nav className={styles.navContainer}>
@@ -106,6 +126,7 @@ export default function AppSidebar({ collapsed, onToggle, onMobileClose }: Sideb
                         styles.navLink,
                         isActive && styles.navLinkActive
                       )}
+                      title={collapsed ? item.label : undefined}
                     >
                       <item.icon size={18} className={styles.navIcon} />
                       {!collapsed && <span className="truncate">{item.label}</span>}
@@ -129,7 +150,9 @@ export default function AppSidebar({ collapsed, onToggle, onMobileClose }: Sideb
               {!collapsed && (
                 <div className={styles.nameRoleWrapper}>
                   <span className={styles.fullName}>{user.fullName}</span>
-                  <span className={clsx("badge badge-info", styles.roleBadge)}>{user.role === 'SUPER_ADMIN' ? 'Admin' : 'Sales'}</span>
+                  <span className={clsx("badge", user.role === 'SUPER_ADMIN' ? 'badge-primary' : 'badge-info', styles.roleBadge)}>
+                    {user.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Sales Manager'}
+                  </span>
                 </div>
               )}
             </div>
@@ -150,6 +173,7 @@ export default function AppSidebar({ collapsed, onToggle, onMobileClose }: Sideb
           <button
             onClick={onToggle}
             className={styles.collapseButton}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             <ChevronLeft size={16} className={clsx(
               styles.chevronIcon,

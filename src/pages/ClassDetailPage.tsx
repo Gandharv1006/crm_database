@@ -24,8 +24,13 @@ import {
   UploadCloud,
   Eye,
   EyeOff,
-  Copy
+  Copy,
+  Building2,
+  Sparkles,
+  Image as ImageIcon
 } from "lucide-react";
+import PhotoUploadField from "@/components/PhotoUploadField";
+import { uploadToCloudinary } from "@/services/cloudinary";
 import {
   getClassById,
   getBatchesByOwner,
@@ -255,6 +260,12 @@ export default function ClassDetailPage() {
   let pincodeText = "—";
   let alternateMobile = "—";
   let rawNotes = reg.notes || "";
+  let classLogo = owner.class_logo_url || "";
+  let classPhoto = owner.class_photo_url || "";
+  let ownerPhoto = owner.owner_photo_url || "";
+  let instituteId = owner.institute_id || "";
+  let deviceId = owner.device_id || "";
+
   try {
     const parsed = JSON.parse(reg.notes);
     if (parsed && typeof parsed === "object") {
@@ -263,6 +274,11 @@ export default function ClassDetailPage() {
       pincodeText = parsed.pincode || "—";
       alternateMobile = parsed.alternateMobile || "—";
       rawNotes = parsed.notes || "";
+      if (!classLogo && parsed.classLogoUrl) classLogo = parsed.classLogoUrl;
+      if (!classPhoto && parsed.classPhotoUrl) classPhoto = parsed.classPhotoUrl;
+      if (!ownerPhoto && parsed.ownerPhotoUrl) ownerPhoto = parsed.ownerPhotoUrl;
+      if (!instituteId && parsed.instituteId) instituteId = parsed.instituteId;
+      if (!deviceId && parsed.deviceId) deviceId = parsed.deviceId;
     }
   } catch {
     // Keep raw notes as address text fallback
@@ -288,15 +304,50 @@ export default function ClassDetailPage() {
         <span className="text-[var(--color-text-primary)]">{reg.institute_name || owner.institute_name}</span>
       </div>
 
-      {/* Header */}
+      {/* Header with Prominent CRM Branding & Logo */}
       <div className={styles.headerRow}>
-        <div>
-          <h1 className={styles.headerTitle}>
-            {reg.institute_name || owner.institute_name}
-          </h1>
-          <p className={styles.headerSubtitle}>
-            Class ID: {formatClassId(reg.registration_id)}
-          </p>
+        <div className={styles.headerBrandRow}>
+          <div className={styles.classLogoContainer}>
+            {classLogo ? (
+              <img
+                src={classLogo}
+                alt={reg.institute_name || owner.institute_name}
+                className={styles.classLogoImg}
+              />
+            ) : (
+              <div className={styles.classLogoFallback}>
+                <Building2 size={32} />
+              </div>
+            )}
+          </div>
+          <div className={styles.headerInfoBlock}>
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className={styles.headerTitle}>
+                {reg.institute_name || owner.institute_name}
+              </h1>
+              <span className={clsx("badge", `badge-${(reg.status || "active").toLowerCase()}`)}>
+                {reg.status || "ACTIVE"}
+              </span>
+              <span className="badge badge-info">
+                {reg.plan_type || "Basic"}
+              </span>
+            </div>
+            <div className={styles.headerMetaRow}>
+              <span className={styles.classIdPill}>
+                {formatClassId(reg.registration_id)}
+              </span>
+              {instituteId && (
+                <span className={styles.metaPill}>
+                  Institute Code: <strong>{instituteId}</strong>
+                </span>
+              )}
+              {owner.city && (
+                <span className={styles.metaPill}>
+                  <MapPin size={12} className="inline mr-1" /> {owner.city}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
         <div className={styles.headerActions}>
           {isSuperAdmin() && (
@@ -409,6 +460,66 @@ export default function ClassDetailPage() {
                     {reg.registered_at ? new Date(reg.registered_at).toLocaleDateString() : "—"}
                   </span>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Institute Branding & Media Card */}
+          <div className="glass-card-elevated p-6">
+            <div className="flex items-center justify-between pb-3 mb-4 border-b border-[var(--color-border-subtle)]">
+              <h2 className="text-[0.8rem] font-bold tracking-[0.08em] uppercase text-[var(--color-text-muted)] flex items-center gap-2">
+                <ImageIcon size={16} className="text-[var(--color-brand-400)]" />
+                Branding & Visual Assets
+              </h2>
+              {isSuperAdmin() && (
+                <button
+                  className="btn-ghost !py-1 !px-2.5 text-xs flex items-center gap-1.5"
+                  onClick={() => setShowEditClass(true)}
+                >
+                  <Edit size={13} />
+                  Edit Assets
+                </button>
+              )}
+            </div>
+            <div className={styles.assetsGrid}>
+              <div className={styles.assetCard}>
+                <span className={styles.assetLabel}>Class Logo</span>
+                {classLogo ? (
+                  <div className={styles.assetThumbBox}>
+                    <img src={classLogo} alt="Class Logo" className={styles.assetThumbImg} />
+                  </div>
+                ) : (
+                  <div className={styles.assetEmptyBox}>
+                    <Building2 size={22} className="text-[var(--color-text-muted)]" />
+                    <span className="text-[11px] text-[var(--color-text-muted)]">No logo uploaded</span>
+                  </div>
+                )}
+              </div>
+              <div className={styles.assetCard}>
+                <span className={styles.assetLabel}>Campus / Class Photo</span>
+                {classPhoto ? (
+                  <div className={styles.assetThumbBox}>
+                    <img src={classPhoto} alt="Class Photo" className={styles.assetThumbImg} />
+                  </div>
+                ) : (
+                  <div className={styles.assetEmptyBox}>
+                    <ImageIcon size={22} className="text-[var(--color-text-muted)]" />
+                    <span className="text-[11px] text-[var(--color-text-muted)]">No campus photo</span>
+                  </div>
+                )}
+              </div>
+              <div className={styles.assetCard}>
+                <span className={styles.assetLabel}>Owner Photo</span>
+                {ownerPhoto ? (
+                  <div className={styles.assetThumbBox}>
+                    <img src={ownerPhoto} alt="Owner Photo" className={styles.assetThumbImg} />
+                  </div>
+                ) : (
+                  <div className={styles.assetEmptyBox}>
+                    <Users size={22} className="text-[var(--color-text-muted)]" />
+                    <span className="text-[11px] text-[var(--color-text-muted)]">No owner photo</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1164,8 +1275,19 @@ function EditClassDialog({
     initialNotes = JSON.parse(reg.notes || "{}");
   } catch {}
 
+  // Photos & Logo state
+  const [classLogoFile, setClassLogoFile] = useState<File | null>(null);
+  const [classPhotoFile, setClassPhotoFile] = useState<File | null>(null);
+  const [ownerPhotoFile, setOwnerPhotoFile] = useState<File | null>(null);
+
+  const [classLogoUrl, setClassLogoUrl] = useState<string>(owner.class_logo_url || initialNotes.classLogoUrl || "");
+  const [classPhotoUrl, setClassPhotoUrl] = useState<string>(owner.class_photo_url || initialNotes.classPhotoUrl || "");
+  const [ownerPhotoUrl, setOwnerPhotoUrl] = useState<string>(owner.owner_photo_url || initialNotes.ownerPhotoUrl || "");
+
   const [form, setForm] = useState({
     instituteName: owner.institute_name || "",
+    instituteId: owner.institute_id || initialNotes.instituteId || "",
+    deviceId: owner.device_id || initialNotes.deviceId || "",
     city: owner.city || "",
     ownerFullName: owner.users?.full_name || owner.contact_person || "",
     ownerMobile: owner.users?.mobile || owner.contact || "",
@@ -1176,6 +1298,8 @@ function EditClassDialog({
     pincode: initialNotes.pincode || "",
     deductionPerStudent: Number(wallet.deduction_per_student) || 0,
     status: reg.status || "ACTIVE",
+    planType: reg.plan_type || "Basic",
+    notes: initialNotes.notes || "",
   });
 
   const [credentials, setCredentials] = useState({
@@ -1192,12 +1316,43 @@ function EditClassDialog({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!form.instituteName || !form.ownerFullName || !form.ownerMobile || !form.ownerEmail) {
-      toast.error("Please fill all required fields");
+    if (!form.instituteName.trim()) {
+      toast.error("Institute Name is required");
       return;
     }
+    if (!form.ownerFullName.trim()) {
+      toast.error("Owner Full Name is required");
+      return;
+    }
+    if (!form.ownerMobile.trim()) {
+      toast.error("Owner Mobile is required");
+      return;
+    }
+    if (!form.ownerEmail.trim()) {
+      toast.error("Owner Email is required");
+      return;
+    }
+
     setSaving(true);
     try {
+      let finalLogoUrl = classLogoUrl;
+      let finalClassPhotoUrl = classPhotoUrl;
+      let finalOwnerPhotoUrl = ownerPhotoUrl;
+
+      if (classLogoFile) {
+        toast.loading("Uploading class logo...", { id: "class-edit-upload" });
+        finalLogoUrl = await uploadToCloudinary(classLogoFile);
+      }
+      if (classPhotoFile) {
+        toast.loading("Uploading campus photo...", { id: "class-edit-upload" });
+        finalClassPhotoUrl = await uploadToCloudinary(classPhotoFile);
+      }
+      if (ownerPhotoFile) {
+        toast.loading("Uploading owner photo...", { id: "class-edit-upload" });
+        finalOwnerPhotoUrl = await uploadToCloudinary(ownerPhotoFile);
+      }
+      toast.dismiss("class-edit-upload");
+
       await updateClassFullDetails(ownerId, {
         instituteName: form.instituteName.trim(),
         city: form.city.trim(),
@@ -1208,6 +1363,13 @@ function EditClassDialog({
         officeAddress: form.officeAddress.trim(),
         state: form.state.trim(),
         pincode: form.pincode.trim(),
+        instituteId: form.instituteId.trim(),
+        deviceId: form.deviceId.trim(),
+        planType: form.planType,
+        notes: form.notes.trim(),
+        classLogoUrl: finalLogoUrl,
+        classPhotoUrl: finalClassPhotoUrl,
+        ownerPhotoUrl: finalOwnerPhotoUrl,
         deductionPerStudent: Number(form.deductionPerStudent) || 0,
         status: form.status,
         salespersonIds: selectedSalespersonIds
@@ -1221,26 +1383,65 @@ function EditClassDialog({
         paymentBoardPassword: credentials.paymentBoardEnabled ? credentials.paymentBoardPassword : null,
       });
 
-      toast.success("Class details updated!");
+      toast.success("Class details and logo updated successfully!");
       onSaved();
     } catch (err: any) {
       toast.error(err.message || "Failed to update class details");
     } finally {
       setSaving(false);
+      toast.dismiss("class-edit-upload");
     }
   };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "700px" }}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "780px" }}>
         <div className="modal-header">
-          <h2 className="text-lg font-bold text-[var(--color-text-primary)]">Edit Class Details</h2>
+          <div>
+            <h2 className="text-lg font-bold text-[var(--color-text-primary)]">Edit Class & Institute</h2>
+            <p className="text-xs text-[var(--color-text-muted)]">Modify institute branding, owner contact, financials and credentials.</p>
+          </div>
           <button className="btn-ghost !p-2 !rounded-lg" onClick={onClose}>
             <X size={18} />
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="p-6 text-left flex flex-col gap-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
+        <form onSubmit={handleSubmit} className="p-6 text-left flex flex-col gap-6 max-h-[82vh] overflow-y-auto custom-scrollbar">
           
+          {/* Section 1: Logo & Photos */}
+          <div className="space-y-4">
+            <h3 className="text-[0.75rem] font-bold tracking-[0.08em] uppercase text-[var(--color-text-muted)] pb-2 border-b border-[var(--color-border-subtle)] flex items-center justify-between">
+              <span>Class Logo & Branding Photos</span>
+              <span className="text-xs font-normal normal-case text-[var(--color-brand-400)]">View & Edit All Media</span>
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <PhotoUploadField
+                label="Class / Institute Logo"
+                value={classLogoFile}
+                existingUrl={classLogoUrl}
+                onChange={setClassLogoFile}
+                onClearExisting={() => setClassLogoUrl("")}
+                disabled={saving}
+              />
+              <PhotoUploadField
+                label="Campus / Class Photo"
+                value={classPhotoFile}
+                existingUrl={classPhotoUrl}
+                onChange={setClassPhotoFile}
+                onClearExisting={() => setClassPhotoUrl("")}
+                disabled={saving}
+              />
+              <PhotoUploadField
+                label="Owner Photo"
+                value={ownerPhotoFile}
+                existingUrl={ownerPhotoUrl}
+                onChange={setOwnerPhotoFile}
+                onClearExisting={() => setOwnerPhotoUrl("")}
+                disabled={saving}
+              />
+            </div>
+          </div>
+
+          {/* Section 2: Institute Information */}
           <div className="space-y-4">
             <h3 className="text-[0.75rem] font-bold tracking-[0.08em] uppercase text-[var(--color-text-muted)] pb-2 border-b border-[var(--color-border-subtle)]">
               Institute Info
@@ -1248,7 +1449,15 @@ function EditClassDialog({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className={clsx(styles.fieldGroup, "sm:col-span-2")}>
                 <label className={styles.fieldLabel}>Institute Name *</label>
-                <input className="input-field" value={form.instituteName} onChange={(e) => set("instituteName", e.target.value)} />
+                <input className="input-field" value={form.instituteName} onChange={(e) => set("instituteName", e.target.value)} required />
+              </div>
+              <div className={styles.fieldGroup}>
+                <label className={styles.fieldLabel}>Institute ID / Code</label>
+                <input className="input-field font-mono" placeholder="e.g. ACAD-01" value={form.instituteId} onChange={(e) => set("instituteId", e.target.value)} />
+              </div>
+              <div className={styles.fieldGroup}>
+                <label className={styles.fieldLabel}>Device ID</label>
+                <input className="input-field font-mono" placeholder="Biometric / App Device ID" value={form.deviceId} onChange={(e) => set("deviceId", e.target.value)} />
               </div>
               <div className={clsx(styles.fieldGroup, "sm:col-span-2")}>
                 <label className={styles.fieldLabel}>Office Address</label>
@@ -1269,18 +1478,19 @@ function EditClassDialog({
             </div>
           </div>
 
+          {/* Section 3: Owner Details */}
           <div className="space-y-4">
             <h3 className="text-[0.75rem] font-bold tracking-[0.08em] uppercase text-[var(--color-text-muted)] pb-2 border-b border-[var(--color-border-subtle)]">
-              Owner Details
+              Owner Contact Details
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className={clsx(styles.fieldGroup, "sm:col-span-2")}>
                 <label className={styles.fieldLabel}>Owner Full Name *</label>
-                <input className="input-field" value={form.ownerFullName} onChange={(e) => set("ownerFullName", e.target.value)} />
+                <input className="input-field" value={form.ownerFullName} onChange={(e) => set("ownerFullName", e.target.value)} required />
               </div>
               <div className={styles.fieldGroup}>
                 <label className={styles.fieldLabel}>Mobile Number *</label>
-                <input className="input-field font-mono" value={form.ownerMobile} onChange={(e) => set("ownerMobile", e.target.value)} />
+                <input className="input-field font-mono" value={form.ownerMobile} onChange={(e) => set("ownerMobile", e.target.value)} required />
               </div>
               <div className={styles.fieldGroup}>
                 <label className={styles.fieldLabel}>Alternate Mobile</label>
@@ -1288,19 +1498,20 @@ function EditClassDialog({
               </div>
               <div className={clsx(styles.fieldGroup, "sm:col-span-2")}>
                 <label className={styles.fieldLabel}>Email Address *</label>
-                <input className="input-field" type="email" value={form.ownerEmail} onChange={(e) => set("ownerEmail", e.target.value)} />
+                <input className="input-field" type="email" value={form.ownerEmail} onChange={(e) => set("ownerEmail", e.target.value)} required />
               </div>
             </div>
           </div>
 
+          {/* Section 4: Operational & Commercial Details */}
           <div className="space-y-4">
             <h3 className="text-[0.75rem] font-bold tracking-[0.08em] uppercase text-[var(--color-text-muted)] pb-2 border-b border-[var(--color-border-subtle)]">
-              Operational Details
+              Operational & Plan Details
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className={styles.fieldGroup}>
                 <label className={styles.fieldLabel}>Deduction Per Student (₹) *</label>
-                <input className="input-field font-mono" type="number" value={form.deductionPerStudent} onChange={(e) => set("deductionPerStudent", Number(e.target.value))} />
+                <input className="input-field font-mono" type="number" min="0" value={form.deductionPerStudent} onChange={(e) => set("deductionPerStudent", Number(e.target.value))} required />
               </div>
               <div className={styles.fieldGroup}>
                 <label className={styles.fieldLabel}>Status</label>
@@ -1310,7 +1521,16 @@ function EditClassDialog({
                   <option value="SUSPENDED">Suspended</option>
                 </select>
               </div>
-              <div className={clsx(styles.fieldGroup, "sm:col-span-2")}>
+              <div className={styles.fieldGroup}>
+                <label className={styles.fieldLabel}>Plan Type</label>
+                <select className="form-select" value={form.planType} onChange={(e) => set("planType", e.target.value)}>
+                  <option value="Basic">Basic Plan</option>
+                  <option value="Standard">Standard Plan</option>
+                  <option value="Premium">Premium Plan</option>
+                  <option value="Enterprise">Enterprise Plan</option>
+                </select>
+              </div>
+              <div className={clsx(styles.fieldGroup, "sm:col-span-3")}>
                 <label className={styles.fieldLabel}>Assign Salespeople</label>
                 <div className={styles.salespersonSelectorBox}>
                   {salespeople.map((sp) => (
@@ -1335,10 +1555,19 @@ function EditClassDialog({
                   )}
                 </div>
               </div>
+              <div className={clsx(styles.fieldGroup, "sm:col-span-3")}>
+                <label className={styles.fieldLabel}>Internal Remarks / Notes</label>
+                <textarea
+                  className="input-field !h-20 py-2 custom-scrollbar"
+                  placeholder="Additional notes about this institute..."
+                  value={form.notes}
+                  onChange={(e) => set("notes", e.target.value)}
+                />
+              </div>
             </div>
           </div>
 
-          {/* Login Credentials Section */}
+          {/* Section 5: Login Credentials Section */}
           <div className={styles.credentialsSection}>
             <h3 className={styles.credentialsSectionTitle}>
               Login Credentials
@@ -1424,9 +1653,9 @@ function EditClassDialog({
           </div>
 
           <div className="flex items-center justify-end gap-3 mt-4 pt-4 border-t border-[var(--color-border-subtle)]">
-            <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
+            <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancel</button>
             <button type="submit" className="btn-primary" disabled={saving}>
-              {saving ? <><Loader2 size={16} className="animate-spin" /> Saving...</> : "Save Changes"}
+              {saving ? <><Loader2 size={16} className="animate-spin" /> Saving Changes...</> : "Save All Changes"}
             </button>
           </div>
         </form>

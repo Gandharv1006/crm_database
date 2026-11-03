@@ -1,7 +1,7 @@
 ---
-last_updated: 2026-05-29
+last_updated: 2026-11-03
 updated_by: agent
-trigger: Added class_owners ALTER TABLE column additions in Section 11 migration script.
+trigger: Updated getDashboardStats to aggregate class_owners with crm_class_registrations for accurate class count and add totalStudents & totalWalletBalance platform metrics.
 table_count: 7 (CRM-specific new tables: crm_users, salespeople, class_salesperson_assignments, salesperson_commissions, crm_class_registrations, employees, crm_expenses) + 2 (added shared tables)
 ---
 

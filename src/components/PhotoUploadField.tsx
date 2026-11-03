@@ -8,6 +8,7 @@ interface PhotoUploadFieldProps {
   value: File | null;      // currently selected file
   existingUrl?: string;    // for edit forms — show existing photo
   onChange: (file: File | null) => void;
+  onClearExisting?: () => void;
   disabled?: boolean;      // true during upload/submit
 }
 
@@ -16,6 +17,7 @@ export default function PhotoUploadField({
   value,
   existingUrl,
   onChange,
+  onClearExisting,
   disabled = false,
 }: PhotoUploadFieldProps) {
   const [localPreview, setLocalPreview] = useState<string | null>(null);
@@ -44,6 +46,9 @@ export default function PhotoUploadField({
     e.stopPropagation();
     e.preventDefault();
     onChange(null);
+    if (onClearExisting) {
+      onClearExisting();
+    }
   };
 
   // Determine active preview source
@@ -92,12 +97,12 @@ export default function PhotoUploadField({
             />
             <div className={styles.infoWrapper}>
               <span className={styles.fileName}>
-                {value ? value.name : "Stored Photo"}
+                {value ? value.name : "Stored Image"}
               </span>
               <span className={styles.fileSize}>
                 {value
                   ? `${(value.size / 1024).toFixed(1)} KB`
-                  : "Using existing URL"}
+                  : "Saved Image URL"}
               </span>
             </div>
             {!disabled && (

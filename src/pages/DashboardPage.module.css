@@ -27,7 +27,7 @@
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(1, minmax(0, 1fr));
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 @media (min-width: 640px) {
@@ -38,7 +38,13 @@
 
 @media (min-width: 1024px) {
   .statsGrid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1350px) {
+  .statsGrid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 }
 
@@ -237,4 +243,187 @@
   font-weight: 600;
   font-family: monospace;
   letter-spacing: -0.025em;
+}
+
+/* Table Institute Cell & Constrained Logo */
+.tableInstituteCell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 260px;
+}
+
+.tableClassLogo {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  max-width: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
+  border-radius: 8px;
+  object-fit: cover !important;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-4);
+  display: block;
+}
+
+.tableClassLogoFallback {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  max-width: 32px;
+  min-height: 32px;
+  max-height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--color-surface-4);
+  border: 1px solid var(--color-border-subtle);
+  color: var(--color-brand-400);
+}
+
+.tableInstituteDetails {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.tableInstituteName {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  transition: color 0.15s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tableInstituteName:hover {
+  color: var(--color-brand-400);
+}
+
+.tableInstituteOwner {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chartCard {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.chartWrapper {
+  flex: 1;
+  min-height: 280px;
+  width: 100%;
+}
+
+.chartEmptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 280px;
+  color: var(--color-text-muted);
+}
+
+.emptyIcon {
+  margin-bottom: 0.75rem;
+  opacity: 0.2;
+}
+
+.tableHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.tableContainer {
+  overflow-x: auto;
+  flex: 1;
+}
+
+.studentCountValue {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.studentCountLabel {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  display: block;
+}
+
+.revenueValue {
+  font-family: monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-success);
+}
+
+.viewButton {
+  padding: 4px 10px !important;
+  font-size: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tableEmptyRow {
+  text-align: center;
+  padding: 2rem 0;
+  color: var(--color-text-muted);
+}
+
+.activityEmptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--color-text-muted);
+  min-height: 160px;
+}
+
+.skeletonTitle {
+  height: 2rem;
+  width: 16rem;
+}
+
+.skeletonSubtitle {
+  height: 1rem;
+  width: 12rem;
+}
+
+.skeletonStatCard {
+  height: 9rem;
+  border-radius: 1rem;
+}
+
+.depositDot {
+  background-color: var(--color-success);
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.4);
+}
+
+.deductionDot {
+  background-color: var(--color-danger);
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.4);
+}
+
+.depositAmount {
+  color: var(--color-success);
+}
+
+.deductionAmount {
+  color: var(--color-danger);
 }

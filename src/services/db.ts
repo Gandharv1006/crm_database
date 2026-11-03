@@ -37,33 +37,46 @@ function groupByMonthSum(data: any[], dateField: string, valueField: string) {
 // DASHBOARD & ANALYTICS
 // ────────────────────────────────────────────────────────────
 export async function getDashboardStats() {
-  const { data: regsData, error: regsError } = await supabase
-    .from("crm_class_registrations")
-    .select("status");
-  if (regsError) throw regsError;
+  const [regsRes, ownersRes] = await Promise.all([
+    supabase.from("crm_class_registrations").select("owner_id, status"),
+    supabase.from("class_owners").select("owner_id"),
+  ]);
 
-  const totalRegistered = regsData?.length || 0;
-  const activeClasses = regsData?.filter((r) => r.status === "ACTIVE").length || 0;
-  const pendingVerifications = regsData?.filter((r) => r.status === "INACTIVE").length || 0;
+  if (ownersRes.error) throw ownersRes.error;
 
-  const { data: ownersRes, error: ownersError } = await supabase
-    .from("class_owners")
-    .select("owner_id");
-  if (ownersError) throw ownersError;
+  const regsData = regsRes.data || [];
+  const ownersData = ownersRes.data || [];
+  const ownerIds = ownersData.map((o) => o.owner_id);
 
-  const ownerIds = (ownersRes || []).map((o) => o.owner_id);
+  const regMap = Object.fromEntries(regsData.map((r) => [r.owner_id, r.status]));
 
-  // Fetch deposits (Total Gross Income), expenses, employee salaries, and wallets for deduction rates
-  const [depositsRes, expensesRes, employeesRes, walletsRes] = await Promise.all([
+  // Total registered accounts is all registered class owners
+  const totalRegistered = ownerIds.length;
+  let activeClasses = 0;
+  let pendingVerifications = 0;
+
+  ownerIds.forEach((id) => {
+    const st = regMap[id] || "ACTIVE";
+    if (st === "ACTIVE") activeClasses++;
+    else if (st === "INACTIVE") pendingVerifications++;
+  });
+
+  // Fetch deposits (Total Gross Income), expenses, employee salaries, wallets, and all enrollments
+  const [depositsRes, expensesRes, employeesRes, walletsRes, allEnrollmentsRes] = await Promise.all([
     supabase.from("wallet_transactions").select("amount").eq("transaction_type", "DEPOSIT"),
     supabase.from("crm_expenses").select("amount"),
     supabase.from("employees").select("assigned_salary"),
-    supabase.from("wallets").select("owner_id, deduction_per_student"),
+    supabase.from("wallets").select("owner_id, balance, deduction_per_student"),
+    supabase.from("batch_enrollments").select("student_id"),
   ]);
 
   const totalGrossIncome = (depositsRes.data || []).reduce((s, t) => s + Number(t.amount || 0), 0);
   const totalExpenses = (expensesRes.data || []).reduce((s, e) => s + Number(e.amount || 0), 0);
   const totalSalary = (employeesRes.data || []).reduce((s, emp) => s + Number(emp.assigned_salary || 0), 0);
+  const totalWalletBalance = (walletsRes.data || []).reduce((s, w) => s + Number(w.balance || 0), 0);
+
+  const uniquePlatformStudents = new Set((allEnrollmentsRes.data || []).map((e) => e.student_id));
+  const totalStudents = uniquePlatformStudents.size;
 
   const deductionMap: Record<number, number> = {};
   (walletsRes.data || []).forEach((w) => {
@@ -139,6 +152,8 @@ export async function getDashboardStats() {
     totalSalesmanIncome,
     totalExpenses,
     totalSalary,
+    totalStudents,
+    totalWalletBalance,
   };
 }
 
@@ -212,6 +227,7 @@ export async function getTopClasses(limit = 5) {
       owner_id: o.owner_id,
       institute_name: o.institute_name,
       owner_name: o.users?.full_name || "N/A",
+      class_logo_url: o.class_logo_url || (reg.notes ? (() => { try { return JSON.parse(reg.notes)?.classLogoUrl; } catch { return null; } })() : null),
       student_count: studentCounts[o.owner_id] || 0,
       revenue: depositsMap[o.owner_id] || 0,
       status: reg.status || "ACTIVE",
@@ -337,6 +353,11 @@ export async function getAllClasses(filters?: {
       owner_name: owner.users?.full_name || "N/A",
       owner_mobile: owner.users?.mobile || owner.contact || "",
       owner_email: owner.users?.email || "",
+      class_logo_url: owner.class_logo_url || (reg.notes ? (() => { try { return JSON.parse(reg.notes)?.classLogoUrl; } catch { return null; } })() : null),
+      class_photo_url: owner.class_photo_url || (reg.notes ? (() => { try { return JSON.parse(reg.notes)?.classPhotoUrl; } catch { return null; } })() : null),
+      owner_photo_url: owner.owner_photo_url || (reg.notes ? (() => { try { return JSON.parse(reg.notes)?.ownerPhotoUrl; } catch { return null; } })() : null),
+      institute_id: owner.institute_id || (reg.notes ? (() => { try { return JSON.parse(reg.notes)?.instituteId; } catch { return null; } })() : null),
+      device_id: owner.device_id || (reg.notes ? (() => { try { return JSON.parse(reg.notes)?.deviceId; } catch { return null; } })() : null),
       wallet_balance: Number(wallet.balance || 0),
       deduction_per_student: Number(wallet.deduction_per_student || 0),
       student_count: studentCount,
@@ -1340,14 +1361,28 @@ export async function updateClassFullDetails(ownerId: number, data: {
   state?: string;
   pincode?: string;
   alternateMobile?: string;
+  classLogoUrl?: string | null;
+  classPhotoUrl?: string | null;
+  ownerPhotoUrl?: string | null;
+  instituteId?: string | null;
+  deviceId?: string | null;
+  planType?: string;
+  notes?: string;
 }) {
+  const ownerUpdatePayload: Record<string, any> = {
+    institute_name: data.instituteName,
+    city: data.city,
+    contact: data.ownerMobile,
+  };
+  if (data.classLogoUrl !== undefined) ownerUpdatePayload.class_logo_url = data.classLogoUrl;
+  if (data.classPhotoUrl !== undefined) ownerUpdatePayload.class_photo_url = data.classPhotoUrl;
+  if (data.ownerPhotoUrl !== undefined) ownerUpdatePayload.owner_photo_url = data.ownerPhotoUrl;
+  if (data.instituteId !== undefined) ownerUpdatePayload.institute_id = data.instituteId;
+  if (data.deviceId !== undefined) ownerUpdatePayload.device_id = data.deviceId;
+
   const { error: ownerError } = await supabase
     .from("class_owners")
-    .update({
-      institute_name: data.instituteName,
-      city: data.city,
-      contact: data.ownerMobile,
-    })
+    .update(ownerUpdatePayload)
     .eq("owner_id", ownerId);
   if (ownerError) throw ownerError;
 
@@ -1392,7 +1427,7 @@ export async function updateClassFullDetails(ownerId: number, data: {
     .eq("owner_id", ownerId);
   if (walletError) throw walletError;
 
-  const { data: reg } = await supabase.from("crm_class_registrations").select("notes").eq("owner_id", ownerId).single();
+  const { data: reg } = await supabase.from("crm_class_registrations").select("notes, plan_type").eq("owner_id", ownerId).single();
   let notesObj: any = {};
   try {
     notesObj = JSON.parse(reg?.notes || "{}");
@@ -1403,13 +1438,24 @@ export async function updateClassFullDetails(ownerId: number, data: {
   notesObj.state = data.state || "";
   notesObj.pincode = data.pincode || "";
   notesObj.alternateMobile = data.alternateMobile || "";
+  if (data.notes !== undefined) notesObj.notes = data.notes;
+  if (data.classLogoUrl !== undefined) notesObj.classLogoUrl = data.classLogoUrl;
+  if (data.classPhotoUrl !== undefined) notesObj.classPhotoUrl = data.classPhotoUrl;
+  if (data.ownerPhotoUrl !== undefined) notesObj.ownerPhotoUrl = data.ownerPhotoUrl;
+  if (data.instituteId !== undefined) notesObj.instituteId = data.instituteId;
+  if (data.deviceId !== undefined) notesObj.deviceId = data.deviceId;
+
+  const regUpdatePayload: Record<string, any> = {
+    status: data.status,
+    notes: JSON.stringify(notesObj)
+  };
+  if (data.planType) {
+    regUpdatePayload.plan_type = data.planType;
+  }
 
   const { error: regError } = await supabase
     .from("crm_class_registrations")
-    .update({
-      status: data.status,
-      notes: JSON.stringify(notesObj)
-    })
+    .update(regUpdatePayload)
     .eq("owner_id", ownerId);
   if (regError) throw regError;
 
